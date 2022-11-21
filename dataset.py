@@ -1,4 +1,6 @@
-from PIL import Image
+import cv2
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
 from pathlib import Path
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -21,9 +23,10 @@ class ImageFolderVimeo(Dataset):
             raise RuntimeError(f'Invalid directory "{root}"')
 
     def __getitem__(self, index):
-        img = Image.open(self.samples[index])
+        img = cv2.imread(str(self.samples[index]), cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if self.transform:
-            return self.transform(img)
+            return self.transform(image=img)["image"]
         return img
 
     def __len__(self):
@@ -42,9 +45,10 @@ class Kodak24Dataset(Dataset):
         self.mode = split
 
     def __getitem__(self, index):
-        img = Image.open(self.samples[index]).convert("RGB")
+        img = cv2.imread(str(self.samples[index]), cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if self.transform:
-            return self.transform(img)
+            return self.transform(image=img)["image"]
         return img
 
     def __len__(self):
@@ -52,16 +56,22 @@ class Kodak24Dataset(Dataset):
 
 
 def build_dataset(args):
-    train_transforms = transforms.Compose(
+    train_transforms = A.Compose(
         [
-            transforms.RandomCrop(args.block_size),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
-            transforms.ToTensor(),
+            A.RandomCrop(args.block_size, args.block_size),
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            A.Normalize(mean=[0,0,0], std=[1,1,1], max_pixel_value=255),
+            ToTensorV2(),
         ]
     )
 
-    test_transforms = transforms.Compose([transforms.ToTensor()])
+    test_transforms = A.Compose(
+        [
+            A.Normalize(mean=[0,0,0], std=[1,1,1], max_pixel_value=255),
+            ToTensorV2(),
+        ]
+    )
 
     train_dataset = ImageFolderVimeo(args.dataset, transform=train_transforms)
     test_dataset = Kodak24Dataset(args.dataset, transform=test_transforms)

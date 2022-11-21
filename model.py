@@ -1,6 +1,7 @@
 import torch
-import timm
 import numpy as np
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 from einops import repeat, rearrange
 from einops.layers.torch import Rearrange
@@ -8,6 +9,8 @@ from einops.layers.torch import Rearrange
 from timm.models.layers import trunc_normal_
 from timm.models.vision_transformer import Block
 from torchinfo import summary
+
+
 
 def random_indexes(size : int):
     forward_indexes = np.arange(size)
