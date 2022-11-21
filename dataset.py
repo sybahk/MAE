@@ -68,6 +68,7 @@ def build_dataset(args):
 
     test_transforms = A.Compose(
         [
+            A.RandomCrop(args.block_size, args.block_size),
             A.Normalize(mean=[0,0,0], std=[1,1,1], max_pixel_value=255),
             ToTensorV2(),
         ]
