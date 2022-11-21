@@ -2,9 +2,7 @@ import os
 import argparse
 import math
 import torch
-import torchvision
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.transforms import ToTensor, Compose, Normalize
 from tqdm import tqdm
 
 from model import *
@@ -14,7 +12,7 @@ from dataset import build_dataset
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--batch_size', type=int, default=8)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--base_learning_rate', type=float, default=1.5e-4)
     parser.add_argument('--weight_decay', type=float, default=0.05)
     parser.add_argument('--mask_ratio', type=float, default=0.75)
@@ -22,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_epoch', type=int, default=1)
     parser.add_argument('--model_path', type=str, default='vit-t-mae.pt')
     parser.add_argument('--dataset', type=str, default='../data')
-    parser.add_argument('--block_size', type=int, default=256)
+    parser.add_argument('--block_size', type=int, default=128)
     args = parser.parse_args()
 
     setup_seed(args.seed)
@@ -50,12 +48,14 @@ if __name__ == '__main__':
             optim.step()
             optim.zero_grad()
             losses.append(loss.item())
+            mse_avg = sum(losses) / len(losses)
+            psnr_avg = 10 * math.log10(1 / mse_avg)
             if step_count % 100 == 0:
-                tqdm.write(f"step: {step_count} \t| loss: "+ str(sum(losses)/len(losses)) + "\n")
+                tqdm.write(f"step: {step_count} \t| loss: "+ str(psnr_avg) + "dB")
         lr_scheduler.step()
-        avg_loss = sum(losses) / len(losses)
-        writer.add_scalar('mae_loss', avg_loss, global_step=e)
-        print(f'In epoch {e}, average traning loss is {avg_loss}.')
+        psnr_loss = 10 * math.log10(sum(losses) / len(losses))
+        writer.add_scalar('mae_loss', psnr_loss, global_step=e)
+        print(f'In epoch {e}, average traning loss is {psnr_loss} dB.')
 
         ''' visualize the first 16 predicted images on val dataset'''
         model.eval()

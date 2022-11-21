@@ -7,6 +7,7 @@ from einops.layers.torch import Rearrange
 
 from timm.models.layers import trunc_normal_
 from timm.models.vision_transformer import Block
+from torchinfo import summary
 
 def random_indexes(size : int):
     forward_indexes = np.arange(size)
@@ -37,8 +38,8 @@ class PatchShuffle(torch.nn.Module):
 
 class MAE_Encoder(torch.nn.Module):
     def __init__(self,
-                 image_size=256,
-                 patch_size=16,
+                 image_size=128,
+                 patch_size=8,
                  emb_dim=192,
                  num_layer=12,
                  num_head=3,
@@ -78,8 +79,8 @@ class MAE_Encoder(torch.nn.Module):
 
 class MAE_Decoder(torch.nn.Module):
     def __init__(self,
-                 image_size=256,
-                 patch_size=16,
+                 image_size=128,
+                 patch_size=8,
                  emb_dim=192,
                  num_layer=4,
                  num_head=3,
@@ -123,8 +124,8 @@ class MAE_Decoder(torch.nn.Module):
 
 class MAE_ViT(torch.nn.Module):
     def __init__(self,
-                 image_size=256,
-                 patch_size=16,
+                 image_size=128,
+                 patch_size=8,
                  emb_dim=192,
                  encoder_layer=12,
                  encoder_head=3,
@@ -165,17 +166,5 @@ class ViT_Classifier(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    shuffle = PatchShuffle(0.75)
-    a = torch.rand(16, 16, 10)
-    b, forward_indexes, backward_indexes = shuffle(a)
-    print(b.shape)
-
-    img = torch.rand(2, 3, 256, 256)
-    encoder = MAE_Encoder()
-    decoder = MAE_Decoder()
-    features, backward_indexes = encoder(img)
-    print(forward_indexes.shape)
-    predicted_img, mask = decoder(features, backward_indexes)
-    print(predicted_img.shape)
-    loss = torch.mean((predicted_img - img) ** 2 * mask / 0.75)
-    print(loss)
+    mae = MAE_ViT()
+    summary(mae, (1, 3, 128, 128))
