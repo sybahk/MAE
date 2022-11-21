@@ -4,3 +4,6 @@ tensorboard
 einops
 timm==0.4.12
 tqdm
+torchinfo
+albumentations
+cv2

@@ -3,7 +3,6 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from pathlib import Path
 from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
 
 
 class ImageFolderVimeo(Dataset):
