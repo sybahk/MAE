@@ -37,8 +37,8 @@ class PatchShuffle(torch.nn.Module):
 
 class MAE_Encoder(torch.nn.Module):
     def __init__(self,
-                 image_size=32,
-                 patch_size=2,
+                 image_size=256,
+                 patch_size=16,
                  emb_dim=192,
                  num_layer=12,
                  num_head=3,
@@ -78,8 +78,8 @@ class MAE_Encoder(torch.nn.Module):
 
 class MAE_Decoder(torch.nn.Module):
     def __init__(self,
-                 image_size=32,
-                 patch_size=2,
+                 image_size=256,
+                 patch_size=16,
                  emb_dim=192,
                  num_layer=4,
                  num_head=3,
@@ -123,8 +123,8 @@ class MAE_Decoder(torch.nn.Module):
 
 class MAE_ViT(torch.nn.Module):
     def __init__(self,
-                 image_size=32,
-                 patch_size=2,
+                 image_size=256,
+                 patch_size=16,
                  emb_dim=192,
                  encoder_layer=12,
                  encoder_head=3,
@@ -166,11 +166,11 @@ class ViT_Classifier(torch.nn.Module):
 
 if __name__ == '__main__':
     shuffle = PatchShuffle(0.75)
-    a = torch.rand(16, 2, 10)
+    a = torch.rand(16, 16, 10)
     b, forward_indexes, backward_indexes = shuffle(a)
     print(b.shape)
 
-    img = torch.rand(2, 3, 32, 32)
+    img = torch.rand(2, 3, 256, 256)
     encoder = MAE_Encoder()
     decoder = MAE_Decoder()
     features, backward_indexes = encoder(img)
