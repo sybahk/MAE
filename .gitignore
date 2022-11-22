@@ -2,3 +2,5 @@ __pycache__/
 data/
 logs/
 *.pt
+.vscode
+train.sh

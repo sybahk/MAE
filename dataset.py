@@ -1,19 +1,16 @@
-import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from pathlib import Path
 from torch.utils.data import DataLoader, Dataset
-
+from skimage import io
 
 class ImageFolderVimeo(Dataset):
     def __init__(self, root, transform=None, split="train"):
-        from tqdm import tqdm
-
         self.mode = split
         self.transform = transform
         self.samples = []
         split_dir = Path(root) / Path("vimeo_septuplet/sequences")
-        for sub_f in tqdm(split_dir.iterdir()):
+        for sub_f in split_dir.iterdir():
             if sub_f.is_dir():
                 for sub_sub_f in Path(sub_f).iterdir():
                     self.samples += list(sub_sub_f.iterdir())
@@ -22,8 +19,7 @@ class ImageFolderVimeo(Dataset):
             raise RuntimeError(f'Invalid directory "{root}"')
 
     def __getitem__(self, index):
-        img = cv2.imread(str(self.samples[index]), cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = io.imread(str(self.samples[index]))
         if self.transform:
             return self.transform(image=img)["image"]
         return img
@@ -44,8 +40,7 @@ class Kodak24Dataset(Dataset):
         self.mode = split
 
     def __getitem__(self, index):
-        img = cv2.imread(str(self.samples[index]), cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = io.imread(str(self.samples[index]))
         if self.transform:
             return self.transform(image=img)["image"]
         return img
@@ -60,7 +55,7 @@ def build_dataset(args):
             A.RandomCrop(args.block_size, args.block_size),
             A.HorizontalFlip(p=0.5),
             A.VerticalFlip(p=0.5),
-            A.Normalize(mean=[0,0,0], std=[1,1,1], max_pixel_value=255),
+            A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255),
             ToTensorV2(),
         ]
     )
@@ -68,7 +63,7 @@ def build_dataset(args):
     test_transforms = A.Compose(
         [
             A.RandomCrop(args.block_size, args.block_size),
-            A.Normalize(mean=[0,0,0], std=[1,1,1], max_pixel_value=255),
+            A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255),
             ToTensorV2(),
         ]
     )
@@ -93,3 +88,23 @@ def build_dataset(args):
     )
 
     return train_dataloader, test_dataloader
+
+
+def build_test_dataset(args):
+    test_transforms = A.Compose(
+        [
+            A.RandomCrop(args.block_size, args.block_size),
+            A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255),
+            ToTensorV2(),
+        ]
+    )
+
+    test_dataset = Kodak24Dataset(args.dataset, transform=test_transforms)
+    test_dataloader = DataLoader(
+        test_dataset,
+        batch_size=1,
+        num_workers=0,
+        shuffle=False,
+        pin_memory=True,
+    )
+    return test_dataloader
